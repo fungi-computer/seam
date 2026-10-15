@@ -1,0 +1,54 @@
+{
+  "expectedTarballFiles": [
+    "package/LICENSE",
+    "package/README.md",
+    "package/dist/index.d.ts",
+    "package/dist/index.js",
+    "package/package.json"
+  ],
+  "localDependencies": [],
+  "runtimeFixture": "test/stranger/runtime.mjs",
+  "typecheckFixture": "test/stranger/consumer.mts",
+  "consumerDevDependencies": {
+    "@types/node": "24.13.3"
+  },
+  "docs": {
+    "sigil": "list",
+    "home": {
+      "lead": "Sign host requests and reject reused request signatures.",
+      "example": {
+        "file": "home.ts",
+        "title": "Create a replay guard",
+        "caption": "Admit a nonce once; key provisioning remains with the host."
+      },
+      "ladder": {
+        "start": [
+          {
+            "title": "Quickstart",
+            "href": "/quickstart/",
+            "description": "Run the first example and read its host requirements."
+          }
+        ],
+        "tasks": [
+          {
+            "title": "Examples",
+            "href": "/examples/",
+            "description": "Read worked usage and the checks that exercise it."
+          }
+        ],
+        "reference": [
+          {
+            "title": "API reference",
+            "href": "/api/",
+            "description": "Find public entrypoints and their documented contracts."
+          },
+          {
+            "title": "Install",
+            "href": "/install/",
+            "description": "Check dependencies and runtime requirements."
+          }
+        ]
+      }
+    }
+  }
+}

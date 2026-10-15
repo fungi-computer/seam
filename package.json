@@ -1,0 +1,60 @@
+{
+  "name": "@fungi.computer/seam",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Ed25519 authentication between Fungi Hub and on-box hosts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "pnpm run clean && tsc -p tsconfig.build.json",
+    "clean": "node --input-type=module --eval \"import { rm } from 'node:fs/promises'; await rm('dist', { recursive: true, force: true });\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "format:check": "node ../../tooling/repository/scripts/format-package-check.mjs",
+    "lint:anti-slop": "node ../../tooling/repository/scripts/lint-package-anti-slop.mjs",
+    "lint": "eslint src --max-warnings=0 && ../../node_modules/.bin/oxlint --config ../../oxlint.config.ts --deny-warnings src",
+    "pack": "mkdir -p ../../.botanical/seam-pack && pnpm pack --pack-destination ../../.botanical/seam-pack",
+    "stranger": "tsx ../../tooling/repository/src/artifacts/cli.ts --repo-root ../.. .",
+    "smoke": "node test/stranger/runtime.mjs",
+    "prepack": "node scripts/prepare-package.mjs",
+    "docs": "node ../../apps/package-docs/scripts/build-sites.mjs --check seam"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "license": "MIT",
+  "botanical": {
+    "role": "package",
+    "operations": {
+      "lint": "required",
+      "typecheck": "required",
+      "build": "required",
+      "test": "required",
+      "docs": "required",
+      "pack": "required",
+      "smoke": "required",
+      "stranger": "required"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fungi-computer/seam.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "directory": ".botanical/package",
+    "linkDirectory": false
+  }
+}
