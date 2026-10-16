@@ -1,6 +1,7 @@
 {
   "name": "@fungi.computer/seam",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "author": "Levi <levi@technomancy.dev>",
   "private": false,
   "description": "Ed25519 authentication between Fungi Hub and on-box hosts",
   "type": "module",
