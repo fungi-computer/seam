@@ -1,6 +1,6 @@
 {
   "name": "@fungi.computer/seam",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": "Levi <levi@technomancy.dev>",
   "private": false,
   "description": "Ed25519 authentication between Fungi Hub and on-box hosts",
@@ -9,13 +9,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./machine-link-protocol": {
+      "types": "./dist/machine-link-protocol.d.ts",
+      "import": "./dist/machine-link-protocol.js"
     }
   },
   "scripts": {
     "build": "pnpm run clean && tsc -p tsconfig.build.json",
     "clean": "node --input-type=module --eval \"import { rm } from 'node:fs/promises'; await rm('dist', { recursive: true, force: true });\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
+    "test": "vitest run src/index.test.ts && node --import tsx --test test/machine-link-protocol.test.mjs",
     "format:check": "node ../../tooling/repository/scripts/format-package-check.mjs",
     "lint:anti-slop": "node ../../tooling/repository/scripts/lint-package-anti-slop.mjs",
     "lint": "eslint src --max-warnings=0 && ../../node_modules/.bin/oxlint --config ../../oxlint.config.ts --deny-warnings src",
@@ -23,11 +27,16 @@
     "stranger": "tsx ../../tooling/repository/src/artifacts/cli.ts --repo-root ../.. .",
     "smoke": "node test/stranger/runtime.mjs",
     "prepack": "node scripts/prepare-package.mjs",
-    "docs": "node ../../apps/package-docs/scripts/build-sites.mjs --check seam"
+    "docs": "tsx ../../tooling/repository/src/docs/cli.ts check --root ../..",
+    "docs:write": "tsx ../../tooling/repository/src/docs/cli.ts write --root ../.."
   },
-  "dependencies": {},
+  "dependencies": {
+    "@fungi.computer/carrier": "workspace:*",
+    "effect": "4.0.2"
+  },
   "devDependencies": {
     "@types/node": "24.13.3",
+    "tsx": "4.23.12",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },

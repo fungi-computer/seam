@@ -17,12 +17,20 @@
  * This module is plain Web Crypto so the Worker and the Node.js host share it.
  */
 export const seamHeader = "x-fungi-seam";
+/** Digest sentinel for a body whose integrity is supplied by its transport. */
 export const unsignedPayload = "UNSIGNED-PAYLOAD";
 const version = "fungi-seam-v1";
 const maximumSkewMs = 60_000;
 const maximumNonces = 10_000;
 
-export type SeamSigner = Readonly<{ keyId: string; key: CryptoKey }>;
+/** Sender identity and private Ed25519 key used to sign seam requests. */
+export type SeamSigner = Readonly<{
+  /** Key identifier included in the signed bytes and the request header. */
+  keyId: string;
+  /** Private Ed25519 key with signing usage; custody stays with the sender. */
+  key: CryptoKey;
+}>;
+/** Receiver-pinned public Ed25519 verification keys, indexed by sender key ID. */
 export type SeamVerifiers = ReadonlyMap<string, CryptoKey>;
 
 class SeamAuthError extends Error {
@@ -170,30 +178,57 @@ export async function signSeamRequest(
   return `v1 key=${signer.keyId} ts=${String(now)} nonce=${nonce} body=${digest} sig=${base64url(signature)}`;
 }
 
-/** Nonces seen inside the skew window, bounded. */
-export class SeamReplayGuard {
+/** An atomic admission decision; refusal never discards still-live history. */
+export type SeamReplayAdmission =
+  "admitted" | "replayed" | "at-capacity" | "unavailable";
+
+/** Seam supplies the retention deadline, inclusive of its last fresh instant. */
+export type SeamReplayRecord = Readonly<{
+  /** Authenticated request nonce, unique within this logical receiver's history. */
+  nonce: string;
+  /** Receiver's current time in Unix epoch milliseconds. */
+  now: number;
+  /**
+   * Inclusive retention deadline in Unix epoch milliseconds.
+   * Prune only when this deadline is strictly earlier than `now`.
+   */
+  expiresAt: number;
+}>;
+
+/**
+ * One logical receiver's bounded replay history. A durable host must reopen
+ * the same receiver namespace after reconstruction, never fall back to memory.
+ * Admission atomically prunes expired records, checks nonce uniqueness and the
+ * implementation's finite capacity, then records the nonce before answering
+ * `admitted`. Persist before success; never shorten Seam's inclusive deadline.
+ * Storage mechanics and the numeric capacity belong to the implementation.
+ */
+export type SeamReplayStore = Readonly<{
+  /** Atomically admit one nonce or refuse it; commit before reporting admission. */
+  admit: (
+    record: SeamReplayRecord,
+  ) => SeamReplayAdmission | Promise<SeamReplayAdmission>;
+}>;
+
+/** Bounded process-local history; deliberately not durable across reconstruction. */
+export class SeamReplayGuard implements SeamReplayStore {
   readonly #seen = new Map<string, number>();
 
-  /** Record `nonce`; false if it was already seen and is still live. */
-  admit(nonce: string, now: number): boolean {
+  /** Record one nonce, refusing capacity rather than evicting live history. */
+  admit({ nonce, now, expiresAt }: SeamReplayRecord): SeamReplayAdmission {
     this.#prune(now);
-    if (this.#seen.has(nonce)) return false;
-    this.#makeRoom();
-    this.#seen.set(nonce, now + 2 * maximumSkewMs);
-    return true;
+    if (this.#seen.has(nonce)) return "replayed";
+    if (this.#seen.size >= maximumNonces) return "at-capacity";
+    this.#seen.set(nonce, expiresAt);
+    return "admitted";
   }
 
   #prune(now: number): void {
     for (const [seen, expires] of this.#seen) {
-      if (expires > now) break;
-      this.#seen.delete(seen);
+      // Freshness accepts the boundary instant. Clock steps also mean Map
+      // insertion order need not be expiry order: inspect every bounded entry.
+      if (expires < now) this.#seen.delete(seen);
     }
-  }
-
-  #makeRoom(): void {
-    if (this.#seen.size < maximumNonces) return;
-    const oldest = this.#seen.keys().next();
-    if (!oldest.done) this.#seen.delete(oldest.value);
   }
 }
 
@@ -262,7 +297,7 @@ export async function verifySeamRequest(
   url: string,
   header: string | null,
   digest: string | null,
-  replay: SeamReplayGuard,
+  replay: SeamReplayStore,
   now = Date.now(),
 ): Promise<string> {
   const parsed = parseSeamHeader(header);
@@ -284,9 +319,24 @@ export async function verifySeamRequest(
     ),
   );
   if (!valid) throw new SeamAuthError("bad signature");
-  if (!replay.admit(parsed.nonce, now))
-    throw new SeamAuthError("replayed nonce");
-  return parsed.keyId;
+  const admission = await replay.admit({
+    nonce: parsed.nonce,
+    now,
+    // A timestamp first admitted at ts-skew remains fresh through ts+skew.
+    expiresAt: now + 2 * maximumSkewMs,
+  });
+  switch (admission) {
+    case "admitted":
+      return parsed.keyId;
+    case "replayed":
+      throw new SeamAuthError("replayed nonce");
+    case "at-capacity":
+      throw new SeamAuthError("replay capacity reached");
+    case "unavailable":
+      throw new SeamAuthError("replay store unavailable");
+    default:
+      throw new SeamAuthError("replay store unavailable");
+  }
 }
 
 function assertSeamFreshness(

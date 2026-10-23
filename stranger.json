@@ -4,11 +4,19 @@
     "package/README.md",
     "package/dist/index.d.ts",
     "package/dist/index.js",
+    "package/dist/machine-link-post.d.ts",
+    "package/dist/machine-link-post.js",
+    "package/dist/machine-link-protocol.d.ts",
+    "package/dist/machine-link-protocol.js",
     "package/package.json"
   ],
-  "localDependencies": [],
+  "localDependencies": ["../carrier"],
   "runtimeFixture": "test/stranger/runtime.mjs",
-  "typecheckFixture": "test/stranger/consumer.mts",
+  "typechecks": [
+    {
+      "fixture": "test/stranger/consumer.mts"
+    }
+  ],
   "consumerDevDependencies": {
     "@types/node": "24.13.3"
   },

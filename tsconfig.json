@@ -1,5 +1,13 @@
 {
   "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "types": ["node", "vitest/globals"],
+    "verbatimModuleSyntax": true,
     "target": "ES2022",
     "lib": ["ES2024", "DOM"],
     "module": "ESNext",

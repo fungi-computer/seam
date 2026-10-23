@@ -1,0 +1,17 @@
+# API reference
+
+`signSeamRequest` signs the sender, audience, method, URL and payload digest.
+`verifySeamRequest` checks against pinned public keys and awaits one
+`SeamReplayStore`, returning the verified key ID only after admission.
+`SeamReplayGuard` is its bounded, process-local implementation.
+`SeamReplayRecord` carries the nonce and Seam-owned inclusive retention
+deadline; `SeamReplayAdmission` closes the admission/refusal vocabulary.
+`unsignedPayload` marks a transport-protected stream. Durable receiver binding,
+storage and secret provisioning remain with the host.
+
+## Public entrypoints
+
+- `@fungi.computer/seam`
+
+Type declarations ship beside each JavaScript entrypoint. The README owns usage,
+lifetime rules and limitations.

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "extends": "../../tooling/docs/typedoc.base.json",
+  "name": "@fungi.computer/seam",
+  "entryPoints": ["src/index.ts", "src/machine-link-protocol.ts"],
+  "tsconfig": "tsconfig.build.json",
+  "readme": "docs/api-overview.md",
+  "out": "docs/api"
+}
