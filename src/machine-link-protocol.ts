@@ -9,16 +9,21 @@ export function machineLinkAudience(teamId: string, deviceId: string): string {
   return `fungi-machine-link:${teamId}:${deviceId}`;
 }
 
+/** One wire contract for the signed machine dial; no older-version fallback. */
+export const machineLinkProtocolVersion = "1";
+
 /** The exact GET path signed by Local and verified by its receiving link. */
 export function machineLinkDialUrl(
   issuer: string,
   teamId: string,
   deviceId: string,
 ): URL {
-  return new URL(
+  const url = new URL(
     `/api/teams/${encodeURIComponent(teamId)}/local/mesh/${encodeURIComponent(deviceId)}/connect`,
     issuer,
   );
+  url.searchParams.set("version", machineLinkProtocolVersion);
+  return url;
 }
 
 const identitySchema = Schema.String.check(

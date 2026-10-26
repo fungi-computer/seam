@@ -1,5 +1,18 @@
 # @fungi.computer/seam
 
+## 0.2.0
+
+### Minor Changes
+
+- Changes since 0.1.0:
+
+  - feat(local): back off mesh redials and refuse incompatible protocol
+
+### Patch Changes
+
+- Updated dependencies
+  - @fungi.computer/carrier@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

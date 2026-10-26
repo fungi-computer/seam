@@ -33,7 +33,7 @@ assert.equal(
     "team-stranger",
     "device-stranger",
   ).href,
-  "https://local.invalid/api/teams/team-stranger/local/mesh/device-stranger/connect",
+  "https://local.invalid/api/teams/team-stranger/local/mesh/device-stranger/connect?version=1",
 );
 const controlFrame = { type: "leave", agentId: mailAddress.agentId };
 assert.deepEqual(
