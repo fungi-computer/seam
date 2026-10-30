@@ -18,6 +18,7 @@ storage and secret provisioning remain with the host.
 ## Public entrypoints
 
 - `@fungi.computer/seam`
+- `@fungi.computer/seam/machine-link-protocol`
 
 Type declarations ship beside each JavaScript entrypoint. The README owns usage,
 lifetime rules and limitations.

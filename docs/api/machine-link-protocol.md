@@ -368,6 +368,16 @@ Non-mail requests, not authenticated membership or admitted Session access.
 
 ## Variables
 
+### machineLinkProtocolVersion
+
+```ts
+const machineLinkProtocolVersion: "1" = "1";
+```
+
+One wire contract for the signed machine dial; no older-version fallback.
+
+---
+
 ### agentMailAddressSchema
 
 ```ts
