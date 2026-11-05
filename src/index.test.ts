@@ -3,6 +3,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { expect, it } from "vitest";
 import {
   SeamReplayGuard,
+  SeamReplayPartitions,
   importSeamSigner,
   importSeamVerifiers,
   seamBodyDigest,
@@ -59,6 +60,47 @@ it("refuses capacity without discarding still-live replay history", () => {
   expect(replay.admit({ nonce: "0", now, expiresAt: now + 120_000 })).toBe(
     "replayed",
   );
+});
+
+it("keeps each replay partition's capacity to itself", () => {
+  const replays = new SeamReplayPartitions(2);
+  const flooding = replays.partition("vm-a");
+  const now = Date.now();
+  for (let index = 0; index < 10_000; index += 1)
+    expect(
+      flooding.admit({ nonce: String(index), now, expiresAt: now + 120_000 }),
+    ).toBe("admitted");
+  expect(
+    flooding.admit({ nonce: "overflow", now, expiresAt: now + 120_000 }),
+  ).toBe("at-capacity");
+  // The same nonce in another partition is that source's own first use.
+  expect(
+    replays
+      .partition("vm-c")
+      .admit({ nonce: "0", now, expiresAt: now + 120_000 }),
+  ).toBe("admitted");
+});
+
+it("refuses a new partition at the ceiling until a live one prunes empty", () => {
+  const replays = new SeamReplayPartitions(1);
+  const now = Date.now();
+  expect(
+    replays
+      .partition("vm-a")
+      .admit({ nonce: "1", now, expiresAt: now + 120_000 }),
+  ).toBe("admitted");
+  expect(
+    replays
+      .partition("vm-b")
+      .admit({ nonce: "1", now, expiresAt: now + 120_000 }),
+  ).toBe("at-capacity");
+  const later = now + 120_001;
+  expect(
+    replays
+      .partition("vm-b")
+      .admit({ nonce: "1", now: later, expiresAt: later + 120_000 }),
+  ).toBe("admitted");
+  expect(() => new SeamReplayPartitions(0)).toThrow(RangeError);
 });
 
 it("remembers a nonce through the inclusive freshness boundary", async () => {

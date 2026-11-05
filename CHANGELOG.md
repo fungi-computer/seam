@@ -1,5 +1,13 @@
 # @fungi.computer/seam
 
+## 0.2.2
+
+### Patch Changes
+
+- Changes since 0.2.1:
+
+  - fix(computer): partition on-box VM ingress replay history per VM
+
 ## 0.2.1
 
 ### Patch Changes

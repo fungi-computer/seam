@@ -35,16 +35,16 @@ new SeamReplayGuard(): SeamReplayGuard;
 ##### admit()
 
 ```ts
-admit(__namedParameters): SeamReplayAdmission;
+admit(record): SeamReplayAdmission;
 ```
 
 Record one nonce, refusing capacity rather than evicting live history.
 
 ###### Parameters
 
-| Parameter           | Type                                    |
-| ------------------- | --------------------------------------- |
-| `__namedParameters` | [`SeamReplayRecord`](#seamreplayrecord) |
+| Parameter | Type                                    |
+| --------- | --------------------------------------- |
+| `record`  | [`SeamReplayRecord`](#seamreplayrecord) |
 
 ###### Returns
 
@@ -55,6 +55,59 @@ Record one nonce, refusing capacity rather than evicting live history.
 ```ts
 SeamReplayStore.admit;
 ```
+
+---
+
+### SeamReplayPartitions
+
+Process-local replay history split into independent bounded partitions, one per
+sender-controlled traffic source (for example one VM behind a shared host). A
+source that exhausts its own partition is refused there and never evicts or
+fills another partition. The partition key must be covered by the request
+signature: a partition is created only by `admit`, which
+[verifySeamRequest](#verifyseamrequest) calls after the signature verified, so
+unsigned traffic allocates nothing. Partitions whose history pruned to empty are
+dropped before a new one is refused at the partition ceiling.
+
+#### Constructors
+
+##### Constructor
+
+```ts
+new SeamReplayPartitions(maximumPartitions): SeamReplayPartitions;
+```
+
+`maximumPartitions` is the number of distinct sources that may be live at once.
+
+###### Parameters
+
+| Parameter           | Type     |
+| ------------------- | -------- |
+| `maximumPartitions` | `number` |
+
+###### Returns
+
+[`SeamReplayPartitions`](#seamreplaypartitions)
+
+#### Methods
+
+##### partition()
+
+```ts
+partition(key): SeamReplayStore;
+```
+
+The replay store for one source; nothing is allocated before it admits.
+
+###### Parameters
+
+| Parameter | Type     |
+| --------- | -------- |
+| `key`     | `string` |
+
+###### Returns
+
+[`SeamReplayStore`](#seamreplaystore)
 
 ## Type Aliases
 

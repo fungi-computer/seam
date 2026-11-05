@@ -215,20 +215,74 @@ export class SeamReplayGuard implements SeamReplayStore {
   readonly #seen = new Map<string, number>();
 
   /** Record one nonce, refusing capacity rather than evicting live history. */
-  admit({ nonce, now, expiresAt }: SeamReplayRecord): SeamReplayAdmission {
-    this.#prune(now);
-    if (this.#seen.has(nonce)) return "replayed";
-    if (this.#seen.size >= maximumNonces) return "at-capacity";
-    this.#seen.set(nonce, expiresAt);
-    return "admitted";
+  admit(record: SeamReplayRecord): SeamReplayAdmission {
+    return admitNonce(this.#seen, record);
+  }
+}
+
+/**
+ * Process-local replay history split into independent bounded partitions, one
+ * per sender-controlled traffic source (for example one VM behind a shared
+ * host). A source that exhausts its own partition is refused there and never
+ * evicts or fills another partition. The partition key must be covered by the
+ * request signature: a partition is created only by `admit`, which
+ * {@link verifySeamRequest} calls after the signature verified, so unsigned
+ * traffic allocates nothing. Partitions whose history pruned to empty are
+ * dropped before a new one is refused at the partition ceiling.
+ */
+export class SeamReplayPartitions {
+  readonly #partitions = new Map<string, Map<string, number>>();
+  readonly #maximumPartitions: number;
+
+  /** `maximumPartitions` is the number of distinct sources that may be live at once. */
+  constructor(maximumPartitions: number) {
+    if (!Number.isSafeInteger(maximumPartitions) || maximumPartitions < 1)
+      throw new RangeError("Seam replay partitions need a positive ceiling");
+    this.#maximumPartitions = maximumPartitions;
   }
 
-  #prune(now: number): void {
-    for (const [seen, expires] of this.#seen) {
-      // Freshness accepts the boundary instant. Clock steps also mean Map
-      // insertion order need not be expiry order: inspect every bounded entry.
-      if (expires < now) this.#seen.delete(seen);
+  /** The replay store for one source; nothing is allocated before it admits. */
+  partition(key: string): SeamReplayStore {
+    return { admit: (record) => this.#admit(key, record) };
+  }
+
+  #admit(key: string, record: SeamReplayRecord): SeamReplayAdmission {
+    let seen = this.#partitions.get(key);
+    if (seen === undefined) {
+      if (this.#partitions.size >= this.#maximumPartitions)
+        this.#dropEmpty(record.now);
+      if (this.#partitions.size >= this.#maximumPartitions)
+        return "at-capacity";
+      seen = new Map();
+      this.#partitions.set(key, seen);
     }
+    return admitNonce(seen, record);
+  }
+
+  #dropEmpty(now: number): void {
+    for (const [key, seen] of this.#partitions) {
+      pruneNonces(seen, now);
+      if (seen.size === 0) this.#partitions.delete(key);
+    }
+  }
+}
+
+function admitNonce(
+  seen: Map<string, number>,
+  { nonce, now, expiresAt }: SeamReplayRecord,
+): SeamReplayAdmission {
+  pruneNonces(seen, now);
+  if (seen.has(nonce)) return "replayed";
+  if (seen.size >= maximumNonces) return "at-capacity";
+  seen.set(nonce, expiresAt);
+  return "admitted";
+}
+
+function pruneNonces(seen: Map<string, number>, now: number): void {
+  for (const [nonce, expires] of seen) {
+    // Freshness accepts the boundary instant. Clock steps also mean Map
+    // insertion order need not be expiry order: inspect every bounded entry.
+    if (expires < now) seen.delete(nonce);
   }
 }
 
