@@ -1,5 +1,12 @@
 # @fungi.computer/seam
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @fungi.computer/carrier@0.2.2
+
 ## 0.2.2
 
 ### Patch Changes
