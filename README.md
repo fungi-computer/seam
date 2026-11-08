@@ -1,10 +1,17 @@
-# Fungi host seam
+# Seam (`@fungi.computer/seam`)
 
-Owns the Ed25519 request authentication protocol between the Hub and its on-box
-hosts. Consumers import `@fungi.computer/seam`. The moved implementation and
-replay/signature tests retain their original behavior. Keys remain with the
-operator; no keys are stored in this package. The package ships the protocol and
-replay guard; hosts own key provisioning.
+Seam signs and verifies requests between the Fungi Hub and the hosts it runs on,
+with Ed25519 signatures and replay protection, and carries the machine-link
+protocol between them. Keys stay with the operator; the package ships the
+protocol and the replay guard.
+
+## Install
+
+```sh
+npm install @fungi.computer/seam
+```
+
+## Machine link
 
 `@fungi.computer/seam/machine-link-protocol` owns the shared machine-link
 audience/dial URL, bounded read/leave and Agent-operation grammar, Agent mail
@@ -12,21 +19,6 @@ address schema, and `createMachineLinkPostChannel`. The channel carries ordinary
 Carrier Post envelopes and receipts; Carrier retains retries. Hosts own live
 authorization, socket lifetime and durable replay storage. Delegation request
 keys and execution policy remain with the delegation engine, not Seam.
-
-Run `pnpm --filter @fungi.computer/seam test` for signature, audience, body and
-replay laws. Computer and game-server host tests exercise its real consumers.
-
-## Packed consumer readiness
-
-Run `pnpm run build`, `pnpm run pack` and `pnpm run stranger` in this package.
-The maintained stranger proof installs only package tarballs into a fresh npm
-consumer, checks the exact shipped files, runs the public runtime fixture and
-compiles every JavaScript entrypoint with strict NodeNext and no library-check
-skip. This qualification does not publish npm releases or push a repository
-split.
-
-See [LICENSE](LICENSE) for the license and the package manifest for its public
-repository destination.
 
 ## Quick start
 
@@ -69,11 +61,19 @@ strictly older deadlines, without assuming insertion order is expiry order.
 The packed runtime fixture at `test/stranger/runtime.mjs` exercises the public
 API in a fresh consumer. Run `pnpm run stranger` after building the package.
 
-## Install
-
-Install the package tarball with npm. The manifest pins its runtime
-dependencies.
-
 ## Contribute and license
 
 See [LICENSE](LICENSE) for the MIT terms.
+
+## Packed consumer readiness
+
+Run `pnpm run build`, `pnpm run pack` and `pnpm run stranger` in this package.
+The maintained stranger proof installs only package tarballs into a fresh npm
+consumer, checks the exact shipped files, runs the public runtime fixture and
+compiles every JavaScript entrypoint with strict NodeNext and no library-check
+skip. This qualification does not publish npm releases or push a repository
+split.
+
+Run `pnpm --filter @fungi.computer/seam test` for signature, audience, body and
+replay laws. Computer and game-server host tests exercise its real consumers.
+See [LICENSE](LICENSE).
