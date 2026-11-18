@@ -1,5 +1,61 @@
 # Seam (`@fungi.computer/seam`)
 
+Seam signs and checks requests between the Fungi Hub and the machines it runs
+on, and stops a captured request from being replayed.
+
+```mermaid
+flowchart LR
+  Hub[Fungi Hub] -->|Ed25519-signed request| Host[Host]
+  Host --> Seam[Seam verifies]
+  Seam -->|replay guard: admitted or replayed| Host
+  Operator[Operator] -.->|keeps the keys| Hub
+```
+
+## Quick start
+
+Install it:
+
+```sh
+npm install @fungi.computer/seam
+```
+
+```ts
+import { SeamReplayGuard } from "@fungi.computer/seam";
+
+const replay = new SeamReplayGuard();
+const now = Date.now();
+const record = {
+  nonce: "00112233445566778899aabbccddeeff",
+  now,
+  expiresAt: now + 120_000,
+};
+console.log(replay.admit(record)); // admitted
+console.log(replay.admit(record)); // replayed
+```
+
+## Common tasks
+
+### Reject a replayed request
+
+`SeamReplayGuard.admit` returns `admitted` once and `replayed` after. See the
+Quick start.
+
+### Talk over the machine link
+
+See [Machine link](#machine-link).
+
+### Understand the protocol
+
+See [Core concepts](#core-concepts).
+
+### Check a packed install
+
+See [Packed consumer readiness](#packed-consumer-readiness).
+
+## Reference
+
+### Overview
+
 Seam signs and verifies requests between the Fungi Hub and the hosts it runs on,
 with Ed25519 signatures and replay protection, and carries the machine-link
 protocol between them. Keys stay with the operator; the package ships the
@@ -19,22 +75,6 @@ address schema, and `createMachineLinkPostChannel`. The channel carries ordinary
 Carrier Post envelopes and receipts; Carrier retains retries. Hosts own live
 authorization, socket lifetime and durable replay storage. Delegation request
 keys and execution policy remain with the delegation engine, not Seam.
-
-## Quick start
-
-```ts
-import { SeamReplayGuard } from "@fungi.computer/seam";
-
-const replay = new SeamReplayGuard();
-const now = Date.now();
-const record = {
-  nonce: "00112233445566778899aabbccddeeff",
-  now,
-  expiresAt: now + 120_000,
-};
-console.log(replay.admit(record)); // admitted
-console.log(replay.admit(record)); // replayed
-```
 
 ## Core concepts
 
