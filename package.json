@@ -1,6 +1,6 @@
 {
   "name": "@fungi.computer/seam",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "author": "Levi <levi@technomancy.dev>",
   "private": false,
   "description": "Ed25519 authentication between Fungi Hub and on-box hosts",
@@ -23,7 +23,7 @@
     "prepack": "node scripts/prepare-package.mjs"
   },
   "dependencies": {
-    "@fungi.computer/carrier": "0.2.5",
+    "@fungi.computer/carrier": "0.2.6",
     "effect": "4.0.2"
   },
   "devDependencies": {

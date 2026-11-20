@@ -1,5 +1,11 @@
 # @fungi.computer/seam
 
+## 0.2.7
+
+### Patch Changes
+
+- @fungi.computer/carrier@0.2.6
+
 ## 0.2.6
 
 ### Patch Changes
